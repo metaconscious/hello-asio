@@ -11,31 +11,44 @@ int main()
 
     socket.connect(remoteEndpoint);
 
-    asio::error_code errorCode{};
-
     std::string message{ "Hello, asio!" };
-
-    socket.write_some(asio::buffer(message), errorCode);
-
-    if (errorCode)
-    {
-        std::cerr << "Error while writing: " << errorCode.message() << '\n';
-        return EXIT_FAILURE;
-    }
-
     char buffer[1024];
 
-    auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
-
-    if (errorCode)
+    while (std::getline(std::cin, message, '\n'))
     {
-        std::cerr << "Error while reading: " << errorCode.message() << '\n';
-        return EXIT_FAILURE;
+        if (std::cin.fail())
+        {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        asio::error_code errorCode{};
+
+        socket.write_some(asio::buffer(message), errorCode);
+
+        if (errorCode)
+        {
+            std::cerr << "Error while writing: " << errorCode.message() << '\n';
+            return EXIT_FAILURE;
+        }
+
+        auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
+
+        if (errorCode == asio::error::eof)
+        {
+            std::cerr << "Socket closed.\n";
+            return EXIT_FAILURE;
+        }
+        else if (errorCode)
+        {
+            std::cerr << "Error while reading: " << errorCode.message() << '\n';
+            return EXIT_FAILURE;
+        }
+
+        std::string echo{ buffer, bytesReceived };
+
+        std::cout << "Echo from server: " << echo << '\n';
     }
-
-    std::string echo{ buffer, bytesReceived };
-
-    std::cout << "Echo from server: " << echo << '\n';
 
     return EXIT_SUCCESS;
 }

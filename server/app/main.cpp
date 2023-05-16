@@ -11,25 +11,38 @@ int main()
 
     char buffer[1024];
     asio::error_code errorCode{};
-    auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
 
-    if (errorCode)
+    while (true)
     {
-        std::cerr << "Error while reading: " << errorCode.message() << '\n';
-        return EXIT_FAILURE;
+        auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
+
+        if (errorCode == asio::error::eof)
+        {
+            std::cout << "Socket closed.\n";
+            return EXIT_SUCCESS;
+        }
+        else if (errorCode)
+        {
+            std::cerr << "Error while reading: " << errorCode.message() << '\n';
+            return EXIT_FAILURE;
+        }
+
+        std::string_view message{ buffer, bytesReceived };
+
+        if (message == "!exit")
+        {
+            std::cout << "Close command received from peer.\n";
+            return EXIT_SUCCESS;
+        }
+
+        std::cout << "Received from client: " << message << '\n';
+
+        socket.write_some(asio::buffer(message), errorCode);
+
+        if (errorCode)
+        {
+            std::cerr << "Error while writing: " << errorCode.message() << '\n';
+            return EXIT_FAILURE;
+        }
     }
-
-    std::string_view message{ buffer, bytesReceived };
-
-    std::cout << "Received from client: " << message << '\n';
-
-    socket.write_some(asio::buffer(message), errorCode);
-
-    if (errorCode)
-    {
-        std::cerr << "Error while writing: " << errorCode.message() << '\n';
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
 }
