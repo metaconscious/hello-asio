@@ -18,8 +18,10 @@ int main()
     {
         if (std::cin.fail())
         {
+            std::cerr << "std::cin.fail() == true. Reset.\n";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
         }
 
         asio::error_code errorCode{};
