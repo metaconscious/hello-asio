@@ -11,16 +11,31 @@ int main()
 
     socket.connect(remoteEndpoint);
 
-    char buffer[1024];
     asio::error_code errorCode{};
 
-    socket.read_some(asio::buffer(buffer), errorCode);
+    std::string message{ "Hello, asio!" };
+
+    socket.write_some(asio::buffer(message), errorCode);
+
+    if (errorCode)
+    {
+        std::cerr << "Error while writing: " << errorCode.message() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    char buffer[1024];
+
+    auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
 
     if (errorCode)
     {
         std::cerr << "Error while reading: " << errorCode.message() << '\n';
         return EXIT_FAILURE;
     }
+
+    std::string echo{ buffer, bytesReceived };
+
+    std::cout << "Echo from server: " << echo << '\n';
 
     return EXIT_SUCCESS;
 }

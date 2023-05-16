@@ -11,7 +11,7 @@ int main()
 
     char buffer[1024];
     asio::error_code errorCode{};
-    socket.read_some(asio::buffer(buffer), errorCode);
+    auto bytesReceived{ socket.read_some(asio::buffer(buffer), errorCode) };
 
     if (errorCode)
     {
@@ -19,7 +19,17 @@ int main()
         return EXIT_FAILURE;
     }
 
-    std::cout << std::string_view{ buffer } << '\n';
+    std::string_view message{ buffer, bytesReceived };
+
+    std::cout << "Received from client: " << message << '\n';
+
+    socket.write_some(asio::buffer(message), errorCode);
+
+    if (errorCode)
+    {
+        std::cerr << "Error while writing: " << errorCode.message() << '\n';
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
